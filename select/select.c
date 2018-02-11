@@ -6,9 +6,10 @@
 #include<sys/socket.h>
 #include<sys/types.h>
 #include<stdlib.h>
+#include<fcntl.h>
 #include<arpa/inet.h>
 #include<netinet/in.h>
-#include<fcntl.h>
+
 
 
 static void usage(const char* proc)
