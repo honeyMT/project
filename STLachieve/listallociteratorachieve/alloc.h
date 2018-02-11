@@ -7,6 +7,7 @@ typedef bool(*HANDLE_FUNC)();
 template <int inst>
 class __MallocAllocTemplate {
 
+//
 private:
 	static HANDLE_FUNC __malloc_alloc_oom_handler;
 public:
