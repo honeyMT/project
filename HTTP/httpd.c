@@ -1,6 +1,8 @@
 #include"httpd.h"
 #include<assert.h>
 
+
+//调用失败之后打印日志
 void print_log(char* msg,int level)
 {
 #ifdef _STDOUT_
@@ -84,9 +86,11 @@ static int get_line(int sock,char line[],int size)
     return len;
 }
 
+//给用户回显错误码的函数
 static void echo_string(int sock)
 {}
 
+ //echo资源
 static int echo_www(int sock,char* path,int size)
 {
     int fd = open(path,O_RDONLY);
@@ -97,13 +101,13 @@ static int echo_www(int sock,char* path,int size)
         return 8;
     }
 
-
+    //我们的一个相应信息，必须要包括响应行，消息报头，空行，有效载荷.
     const char* echo_line = "HTTP/1.0 200 OK\r\n";
     send(sock,echo_line,strlen(echo_line),0);
     const char* null_line = "\r\n";
     send(sock,null_line,strlen(null_line),0);
 
-
+    //sendfile 在内核区建立两个fd的数据拷贝,节约效率.
     if(sendfile(sock,fd,NULL,size) < 0)
     {
         echo_string(sock);
@@ -115,7 +119,8 @@ static int echo_www(int sock,char* path,int size)
     return 0;
 }
 
-
+//对于我们的服务器来说，当你读完请求行的时候 你得到了 方法 路径 参数,剩下的消息报头不需要再关心了
+//所以一个get_line 一个读到空行为止.
 static void drop_header(int sock)
 {
 
@@ -142,6 +147,7 @@ static int exe_cgi(int sock,char* method,char* path,char* query_string)
         char line[1024];
         int ret = -1;
         do{
+            //读取到POST方法当中的Content-Length的长度
             ret = get_line(sock,line,sizeof(line));
             if(ret > 0 && strncasecmp(line,"Content-Length: ",16) == 0)
             {
@@ -170,8 +176,8 @@ static int exe_cgi(int sock,char* method,char* path,char* query_string)
         echo_string(sock);
         return 11;
     }
-
-
+    //fork出来一个子进程用来执行cgi可执行方法,然后客户端和父进程通信，父进程和子进程通信.
+    //子进程将你的可执行文件运行的结果传给父进程，然后父进程传输给客户端.
     pid_t id = fork();
     if(id < 0)
     {
@@ -234,6 +240,7 @@ static int exe_cgi(int sock,char* method,char* path,char* query_string)
 }
 
 
+//问答函数
 void *handler_request(void *arg)
 {
     int sock = (int)arg;
@@ -325,7 +332,8 @@ void *handler_request(void *arg)
 
     sprintf(path,"wwwroot%s",url);
     // method,url,query_string,cgi.
-    if(path[strlen(path)-1] == '/') // ''
+    //如果路径只有/ 那就跳转至我们的主页，我们的主页就是index.html
+    if(path[strlen(path)-1] == '/') 
     {
         strcat(path , "index.html");
         //path = /index/html
@@ -340,11 +348,12 @@ void *handler_request(void *arg)
         goto end;
     }else
     {
-        //is mkdir?
+        //path是不是一个目录
         if(S_ISDIR(st.st_mode))
         {
             strcat(path,"/index.html");
-        }//is a.out?
+        }
+        //这里只要有一个人拥有可执行权限，那么就是cgi模式
         else if((st.st_mode & S_IXUSR) || (st.st_mode & S_IXGRP) || (st.st_mode & S_IXOTH))
         {
             cgi = 1;
@@ -355,12 +364,14 @@ void *handler_request(void *arg)
         // ok -> cig path query_string method(fangfa).
         if(cgi)
         {
+            //执行cgi过程
             exe_cgi(sock,method,path,query_string);
         }
         else
         {
             drop_header(sock);
             printf("method : %s, url : %s ,path : %s,cgi : %d,query_string: %s\n",method,url,path,cgi,query_string);
+           
             echo_www(sock,path,st.st_size);
         }
     }
