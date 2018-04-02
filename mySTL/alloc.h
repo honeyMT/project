@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Commod.h"
-
+//
 typedef bool(*HANDLE_FUNC)();
 
 template <int inst>
