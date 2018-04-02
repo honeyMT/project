@@ -2,7 +2,7 @@
 
 //
 // 迭代器的型别
-//
+
 struct InputIteratorTag {};
 struct OutputIteratorTag {};
 struct ForwardIteratorTag : public InputIteratorTag {};
