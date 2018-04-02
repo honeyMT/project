@@ -2,6 +2,8 @@
 #include"iterator.h"
 #include"list.h"
 
+
+//
 int main()
 {
 	TestList();
