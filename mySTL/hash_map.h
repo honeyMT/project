@@ -1,5 +1,6 @@
 #include"HashTableTypename.h"
 
+//
 template<class K, class V>
 class Mymap
 {
