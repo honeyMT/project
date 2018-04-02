@@ -3,6 +3,7 @@
 #include<assert.h>
 #include<vector>
 
+//
 using namespace std;
 
 static size_t GetNextPrime(size_t value)
